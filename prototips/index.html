@@ -1,0 +1,599 @@
+<!doctype html>
+<html lang="lv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pieteikšanās · Ezermalas e-pakalpojumi</title>
+<style>
+  :root {
+    --brand: #0b3d6e; --brand-2: #145a9e; --accent: #1f6fd1; --accent-hover: #185bb0;
+    --text: #0f1b2d; --muted: #5b6b80; --line: #d6dde6; --bg: #f5f7fa;
+    --err: #c2312b; --err-bg: #fdf1f0; --ok: #1a7f4b; --ok-bg: #eef8f2;
+    --radius: 10px;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body { margin: 0; font: 15px/1.5 "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+         color: var(--text); background: var(--bg); -webkit-font-smoothing: antialiased; }
+
+  .layout { min-height: 100%; display: grid; grid-template-columns: minmax(360px, 44%) 1fr; }
+
+  /* Zīmola panelis */
+  .brand { position: relative; overflow: hidden; color: #fff; padding: 48px 56px;
+           display: flex; flex-direction: column; justify-content: space-between;
+           background: linear-gradient(155deg, var(--brand) 0%, var(--brand-2) 100%); }
+  .brand::after { content: ""; position: absolute; inset: auto -20% -35% auto; width: 520px; height: 520px;
+                  border-radius: 50%; background: radial-gradient(circle, rgba(255,255,255,.12), transparent 65%); }
+  .logo { display: flex; align-items: center; gap: 12px; font-weight: 600; font-size: 17px; letter-spacing: .2px; }
+  .logo-mark { width: 40px; height: 40px; border-radius: 10px; background: rgba(255,255,255,.14);
+               display: grid; place-items: center; }
+  .brand h1 { font-size: 34px; line-height: 1.2; font-weight: 650; margin: 0 0 16px; max-width: 420px; }
+  .brand p { color: rgba(255,255,255,.78); max-width: 400px; margin: 0; }
+  .features { list-style: none; padding: 0; margin: 32px 0 0; display: grid; gap: 14px; }
+  .features li { display: flex; gap: 12px; align-items: center; color: rgba(255,255,255,.9); font-size: 14px; }
+  .features svg { flex: none; }
+  .brand footer { font-size: 12px; color: rgba(255,255,255,.55); position: relative; z-index: 1; }
+
+  /* Formas daļa */
+  .panel { display: flex; align-items: center; justify-content: center; padding: 40px 24px; }
+  .card { width: 100%; max-width: 420px; }
+  .card h2 { font-size: 26px; font-weight: 650; margin: 0 0 6px; letter-spacing: -.2px; }
+  .card .sub { color: var(--muted); margin: 0 0 28px; }
+
+  .segmented { display: grid; grid-template-columns: 1fr 1fr; background: #e8edf3; border-radius: var(--radius);
+               padding: 4px; margin-bottom: 28px; }
+  .segmented button { border: 0; background: none; padding: 9px; border-radius: 7px; cursor: pointer;
+                      font: inherit; font-weight: 550; color: var(--muted); transition: .15s; }
+  .segmented button[aria-selected="true"] { background: #fff; color: var(--text);
+                                            box-shadow: 0 1px 3px rgba(15,27,45,.12); }
+
+  .field { margin-bottom: 18px; }
+  .field label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+  .control { position: relative; }
+  .control input { width: 100%; height: 46px; padding: 0 44px 0 14px; font: inherit; color: var(--text);
+                   background: #fff; border: 1px solid var(--line); border-radius: var(--radius);
+                   transition: border-color .15s, box-shadow .15s; }
+  .control input::placeholder { color: #9aa7b6; }
+  .control input:hover { border-color: #b7c2cf; }
+  .control input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(31,111,209,.18); }
+  .field.invalid input { border-color: var(--err); }
+  .field.invalid input:focus { box-shadow: 0 0 0 3px rgba(194,49,43,.15); }
+  .field .error { display: none; color: var(--err); font-size: 12.5px; margin-top: 6px; }
+  .field.invalid .error { display: block; }
+  .toggle-pass { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); width: 34px; height: 34px;
+                 border: 0; background: none; border-radius: 6px; cursor: pointer; color: var(--muted);
+                 display: grid; place-items: center; }
+  .toggle-pass:hover { background: #eef2f6; color: var(--text); }
+
+  .strength { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-top: 8px; }
+  .strength span { height: 4px; border-radius: 2px; background: #e3e8ee; transition: background .2s; }
+  .strength-label { font-size: 12px; color: var(--muted); margin-top: 4px; min-height: 18px; }
+
+  .row { display: flex; justify-content: space-between; align-items: center; margin: -4px 0 22px; font-size: 13.5px; }
+  .check { display: flex; align-items: center; gap: 8px; color: var(--muted); cursor: pointer; }
+  .check input { width: 16px; height: 16px; accent-color: var(--accent); }
+  a { color: var(--accent); text-decoration: none; font-weight: 550; }
+  a:hover { text-decoration: underline; }
+
+  .btn { width: 100%; height: 48px; border: 0; border-radius: var(--radius); background: var(--accent);
+         color: #fff; font: inherit; font-weight: 600; cursor: pointer; transition: background .15s;
+         display: flex; align-items: center; justify-content: center; gap: 10px; }
+  .btn:hover { background: var(--accent-hover); }
+  .btn:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(31,111,209,.35); }
+  .btn[disabled] { opacity: .75; cursor: progress; }
+  .btn.secondary { background: #fff; color: var(--text); border: 1px solid var(--line); }
+  .btn.secondary:hover { background: #f3f6f9; }
+  .spinner { width: 16px; height: 16px; border: 2px solid rgba(255,255,255,.4); border-top-color: #fff;
+             border-radius: 50%; animation: spin .7s linear infinite; display: none; }
+  .btn[disabled] .spinner { display: block; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .alert { display: none; gap: 10px; align-items: flex-start; padding: 12px 14px; border-radius: var(--radius);
+           font-size: 14px; margin-bottom: 20px; }
+  .alert.show { display: flex; }
+  .alert.err { background: var(--err-bg); color: var(--err); }
+  .alert.ok { background: var(--ok-bg); color: var(--ok); }
+
+  .terms { font-size: 12.5px; color: var(--muted); margin: 16px 0 0; text-align: center; }
+  .note { font-size: 12px; color: #8a97a8; text-align: center; margin-top: 32px; }
+
+  .welcome { text-align: center; }
+  .avatar { width: 72px; height: 72px; border-radius: 50%; margin: 0 auto 18px; display: grid; place-items: center;
+            background: #e6effb; color: var(--accent); font-size: 26px; font-weight: 650; }
+  .welcome .sub { margin-bottom: 28px; }
+
+  .hidden { display: none !important; }
+
+  .demo { margin-top: 24px; padding: 12px 14px; border: 1px dashed var(--line); border-radius: var(--radius);
+          font-size: 13px; color: var(--muted); }
+  .demo code { color: var(--text); }
+
+  /* Vadības panelis */
+  .topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 32px;
+            background: var(--brand); color: #fff; }
+  .topbar .logo { font-size: 16px; }
+  .user { display: flex; align-items: center; gap: 12px; font-size: 14px; }
+  .user .avatar { width: 36px; height: 36px; margin: 0; font-size: 14px; background: rgba(255,255,255,.16); color: #fff; }
+  .role { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 600;
+          background: rgba(255,255,255,.16); }
+  .topbar .btn { width: auto; height: 36px; padding: 0 14px; font-size: 14px; background: rgba(255,255,255,.12);
+                 border: 1px solid rgba(255,255,255,.3); }
+  .topbar .btn:hover { background: rgba(255,255,255,.22); }
+  .dash { max-width: 1180px; margin: 0 auto; padding: 32px; }
+  .dash > h1 { font-size: 26px; margin: 0 0 4px; }
+  .dash > .sub { color: var(--muted); margin: 0 0 24px; }
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+  .kpi { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; }
+  .kpi .label { font-size: 13px; color: var(--muted); }
+  .kpi .value { font-size: 30px; font-weight: 650; margin-top: 4px; }
+  .kpi.warn .value { color: var(--err); }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  .box { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; min-width: 0; }
+  .box.wide { grid-column: 1 / -1; }
+  .box h2 { font-size: 17px; margin: 0 0 14px; }
+  .empty { color: var(--muted); font-size: 14px; margin: 0; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  caption { text-align: left; font-size: 17px; font-weight: 650; margin-bottom: 12px; }
+  th, td { text-align: left; padding: 9px 8px; border-bottom: 1px solid #e8edf3; vertical-align: top; }
+  thead th { font-size: 12px; text-transform: uppercase; letter-spacing: .4px; color: var(--muted); font-weight: 600; }
+  td.num, th.num { text-align: right; }
+  .badge { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+  .badge.late { background: var(--err-bg); color: var(--err); }
+  .badge.new { background: #e6effb; color: var(--accent); }
+  .badge.work { background: #fff4e0; color: #8a5a00; }
+  .badge.done { background: var(--ok-bg); color: var(--ok); }
+  .tasks { list-style: none; padding: 0; margin: 0; }
+  .tasks li { display: flex; gap: 12px; align-items: flex-start; padding: 10px 0; border-bottom: 1px solid #e8edf3; }
+  .tasks input { width: 18px; height: 18px; margin-top: 2px; accent-color: var(--accent); flex: none; }
+  .tasks .meta { font-size: 12.5px; color: var(--muted); }
+  .tasks li.is-done .title { text-decoration: line-through; color: var(--muted); }
+  .feed { list-style: none; padding: 0; margin: 0; }
+  .feed li { padding: 10px 0; border-bottom: 1px solid #e8edf3; font-size: 14px; }
+  .feed .meta { font-size: 12.5px; color: var(--muted); }
+  .table-wrap { overflow-x: auto; }
+  .site-footer { text-align: center; font-size: 12px; color: #8a97a8; padding: 8px 0 32px; }
+
+  @media (max-width: 960px) {
+    .kpis { grid-template-columns: repeat(2, 1fr); }
+    .grid { grid-template-columns: 1fr; }
+    .dash { padding: 20px 16px; }
+    .topbar { padding: 12px 16px; flex-wrap: wrap; }
+  }
+
+  @media (max-width: 860px) {
+    .layout { grid-template-columns: 1fr; }
+    .brand { padding: 28px 24px; }
+    .brand h1, .brand p, .features { display: none; }
+    .brand footer { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="layout" id="login-view">
+  <aside class="brand">
+    <div class="logo">
+      <div class="logo-mark" aria-hidden="true">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V10l7-5 7 5v11M9 21v-6h6v6"/></svg>
+      </div>
+      Ezermalas novada pašvaldība
+    </div>
+    <div style="position:relative;z-index:1">
+      <h1>Sadarbība ar organizācijām vienuviet</h1>
+      <p>Organizācijas, kontaktpersonas, mijiedarbības un pieprasījumi vienā darba vietā.</p>
+      <ul class="features">
+        <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Mani uzdevumi un termiņi vienā skatā</li>
+        <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Kavētie pieprasījumi uzreiz redzami</li>
+        <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Pārskats vadītājam</li>
+      </ul>
+    </div>
+    <footer>© 2026 Ezermalas novada pašvaldība (izdomāta) · Mācību prototips</footer>
+  </aside>
+
+  <main class="panel">
+    <div class="card">
+
+      <section id="auth">
+        <h2 id="title">Laipni lūdzam atpakaļ</h2>
+        <p class="sub" id="subtitle">Piesakieties savā kontā, lai turpinātu.</p>
+
+        <div class="segmented" role="tablist">
+          <button id="tab-login" role="tab" aria-selected="true" type="button">Pieteikties</button>
+          <button id="tab-register" role="tab" aria-selected="false" type="button">Reģistrēties</button>
+        </div>
+
+        <div id="alert" class="alert" role="status">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;margin-top:1px"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+          <span id="alert-text"></span>
+        </div>
+
+        <form id="form-login" novalidate>
+          <div class="field">
+            <label for="login-email">E-pasta adrese</label>
+            <div class="control"><input id="login-email" type="email" autocomplete="username" placeholder="vards@piemers.lv"></div>
+            <div class="error">Ievadiet derīgu e-pasta adresi.</div>
+          </div>
+          <div class="field">
+            <label for="login-pass">Parole</label>
+            <div class="control">
+              <input id="login-pass" type="password" autocomplete="current-password" placeholder="••••••••">
+              <button class="toggle-pass" type="button" aria-label="Rādīt paroli"></button>
+            </div>
+            <div class="error">Ievadiet paroli.</div>
+          </div>
+          <div class="row">
+            <label class="check"><input type="checkbox" id="remember"> Atcerēties mani</label>
+            <a href="#" id="forgot">Aizmirsāt paroli?</a>
+          </div>
+          <button class="btn" type="submit"><span class="spinner"></span><span>Pieteikties</span></button>
+        </form>
+
+        <form id="form-register" class="hidden" novalidate>
+          <div class="field">
+            <label for="reg-name">Vārds, uzvārds</label>
+            <div class="control"><input id="reg-name" autocomplete="name" placeholder="Jānis Bērziņš"></div>
+            <div class="error">Ievadiet vārdu un uzvārdu.</div>
+          </div>
+          <div class="field">
+            <label for="reg-email">E-pasta adrese</label>
+            <div class="control"><input id="reg-email" type="email" autocomplete="username" placeholder="vards@piemers.lv"></div>
+            <div class="error">Ievadiet derīgu e-pasta adresi.</div>
+          </div>
+          <div class="field">
+            <label for="reg-pass">Parole</label>
+            <div class="control">
+              <input id="reg-pass" type="password" autocomplete="new-password" placeholder="Vismaz 8 rakstzīmes">
+              <button class="toggle-pass" type="button" aria-label="Rādīt paroli"></button>
+            </div>
+            <div class="strength" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+            <div class="strength-label" id="strength-label"></div>
+            <div class="error">Parolei jābūt vismaz 8 rakstzīmēm.</div>
+          </div>
+          <div class="field">
+            <label for="reg-pass2">Apstipriniet paroli</label>
+            <div class="control">
+              <input id="reg-pass2" type="password" autocomplete="new-password" placeholder="Atkārtojiet paroli">
+              <button class="toggle-pass" type="button" aria-label="Rādīt paroli"></button>
+            </div>
+            <div class="error">Paroles nesakrīt.</div>
+          </div>
+          <button class="btn" type="submit"><span class="spinner"></span><span>Izveidot kontu</span></button>
+          <p class="terms">Reģistrējoties jūs piekrītat <a href="#">lietošanas noteikumiem</a> un <a href="#">privātuma politikai</a>.</p>
+        </form>
+      </section>
+
+      <div class="demo">
+        <strong>Demo konti</strong> (parole <code>Demo1234!</code>):<br>
+        vadītājs — <code>vaditajs@piemers.lv</code><br>
+        darbinieks — <code>darbinieks@piemers.lv</code>
+      </div>
+
+      <p class="note">Prototips · dati glabājas tikai šajā pārlūkā (localStorage)</p>
+    </div>
+  </main>
+</div>
+
+<div id="app-view" class="hidden">
+  <header class="topbar">
+    <div class="logo">
+      <div class="logo-mark" aria-hidden="true">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V10l7-5 7 5v11M9 21v-6h6v6"/></svg>
+      </div>
+      Sadarbības uzskaite
+    </div>
+    <div class="user">
+      <div class="avatar" id="avatar" aria-hidden="true"></div>
+      <div><div id="user-name"></div><span class="role" id="user-role"></span></div>
+      <button id="logout" class="btn" type="button">Iziet un pieteikties no jauna</button>
+    </div>
+  </header>
+
+  <main class="dash">
+    <h1 id="dash-title"></h1>
+    <p class="sub" id="dash-sub"></p>
+
+    <section class="kpis" aria-label="Kopsavilkums">
+      <div class="kpi"><div class="label">Organizācijas</div><div class="value" id="k-orgs"></div></div>
+      <div class="kpi"><div class="label">Atvērtie pieprasījumi</div><div class="value" id="k-open"></div></div>
+      <div class="kpi warn"><div class="label">Kavētie pieprasījumi</div><div class="value" id="k-late"></div></div>
+      <div class="kpi"><div class="label">Uzdevumi šodien (neizpildīti)</div><div class="value" id="k-tasks"></div></div>
+    </section>
+
+    <div class="grid">
+      <section class="box">
+        <h2>Mani uzdevumi šodien</h2>
+        <ul class="tasks" id="tasks"></ul>
+      </section>
+
+      <section class="box">
+        <h2>Pēdējās mijiedarbības</h2>
+        <ul class="feed" id="feed"></ul>
+      </section>
+
+      <section class="box wide table-wrap">
+        <table>
+          <caption>Atvērtie pieprasījumi pēc termiņa</caption>
+          <thead><tr><th scope="col">Pieprasījums</th><th scope="col">Organizācija</th><th scope="col">Statuss</th><th scope="col">Termiņš</th><th scope="col" class="manager-only">Atbildīgais</th></tr></thead>
+          <tbody id="requests"></tbody>
+        </table>
+      </section>
+
+      <section class="box wide table-wrap manager-only">
+        <table>
+          <caption>Aktivitāte pa darbiniekiem (pēdējās 30 dienas)</caption>
+          <thead><tr><th scope="col">Darbinieks</th><th scope="col" class="num">Organizācijas</th><th scope="col" class="num">Mijiedarbības</th><th scope="col" class="num">Atvērtie pieprasījumi</th><th scope="col" class="num">Kavētie</th></tr></thead>
+          <tbody id="staff"></tbody>
+        </table>
+      </section>
+    </div>
+  </main>
+  <footer class="site-footer">Prototips · izdomāti dati · dati glabājas tikai šajā pārlūkā</footer>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const USERS = 'demoUsers', SESSION = 'demoSession';
+const users = () => JSON.parse(localStorage.getItem(USERS) || '{}');
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const EYE = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+const EYE_OFF = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.9 17.9A10 10 0 0 1 12 19c-6.5 0-10-7-10-7a18 18 0 0 1 5.1-5.9M9.9 5.2A9 9 0 0 1 12 5c6.5 0 10 7 10 7a18 18 0 0 1-2.2 3.2M14.1 14.1a3 3 0 1 1-4.2-4.2M2 2l20 20"/></svg>';
+
+async function hash(salt, pass) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(salt + pass));
+  return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('');
+}
+const pause = ms => new Promise(r => setTimeout(r, ms));
+
+function alertMsg(text, kind = 'err') {
+  $('alert-text').textContent = text;
+  $('alert').className = text ? `alert show ${kind}` : 'alert';
+}
+function setInvalid(id, bad) { $(id).closest('.field').classList.toggle('invalid', bad); return bad; }
+function clearErrors(form) { form.querySelectorAll('.field').forEach(f => f.classList.remove('invalid')); }
+async function busy(form, fn) {
+  const btn = form.querySelector('.btn');
+  btn.disabled = true;
+  try { await pause(450); await fn(); } finally { btn.disabled = false; }
+}
+
+function showTab(tab) {
+  const login = tab === 'login';
+  $('tab-login').setAttribute('aria-selected', login);
+  $('tab-register').setAttribute('aria-selected', !login);
+  $('form-login').classList.toggle('hidden', !login);
+  $('form-register').classList.toggle('hidden', login);
+  $('title').textContent = login ? 'Laipni lūdzam atpakaļ' : 'Izveidojiet kontu';
+  $('subtitle').textContent = login ? 'Piesakieties savā kontā, lai turpinātu.' : 'Reģistrācija aizņem mazāk nekā minūti.';
+  clearErrors($('form-login')); clearErrors($('form-register'));
+  alertMsg('');
+}
+
+/* ---------- Lomas un demo dati (F0, F9) ---------- */
+const ROLE_LABEL = { darbinieks: 'Darbinieks', vaditajs: 'Vadītājs' };
+const DEMO_PASS = 'Demo1234!';
+const SEED_USERS = [
+  { email: 'vaditajs@piemers.lv', name: 'Māris Liepa', role: 'vaditajs' },
+  { email: 'darbinieks@piemers.lv', name: 'Anna Kalniņa', role: 'darbinieks' },
+  { email: 'peteris@piemers.lv', name: 'Pēteris Ozols', role: 'darbinieks' },
+];
+const A = 'darbinieks@piemers.lv', P = 'peteris@piemers.lv', M = 'vaditajs@piemers.lv';
+
+const ORGS = [
+  { id: 1, name: 'SIA Ezermalas Koks', owner: A }, { id: 2, name: 'Biedrība "Zaļais krasts"', owner: A },
+  { id: 3, name: 'Ezermalas pagasta pārvalde', owner: A }, { id: 4, name: 'SIA Liepu Loģistika', owner: A },
+  { id: 5, name: 'Nodibinājums "Jauniešu telpa"', owner: A }, { id: 6, name: 'AS Krasta Enerģija', owner: P },
+  { id: 7, name: 'Biedrība "Senioru klubs"', owner: P }, { id: 8, name: 'SIA Ezera Tūrisms', owner: P },
+  { id: 9, name: 'Kalnu novada pašvaldība', owner: P }, { id: 10, name: 'SIA Zivju Ceļš', owner: P },
+];
+// Termiņi un datumi relatīvi pret šodienu (dienās), lai demonstrācija vienmēr būtu aktuāla
+const REQUESTS = [
+  { id: 'P-101', title: 'Atbalsts vides talkai', org: 2, status: 'Darbā', due: -3 },
+  { id: 'P-102', title: 'Būvatļaujas konsultācija', org: 1, status: 'Jauns', due: 2 },
+  { id: 'P-103', title: 'Telpu noma pasākumam', org: 5, status: 'Jauns', due: -1 },
+  { id: 'P-104', title: 'Ceļa remonta saskaņošana', org: 3, status: 'Darbā', due: 5 },
+  { id: 'P-105', title: 'Atbilde par atkritumu tarifu', org: 4, status: 'Atbildēts', due: -6 },
+  { id: 'P-106', title: 'Elektrotīkla pieslēgums', org: 6, status: 'Darbā', due: -4 },
+  { id: 'P-107', title: 'Senioru transporta grafiks', org: 7, status: 'Jauns', due: 7 },
+  { id: 'P-108', title: 'Tūrisma maršruta karte', org: 8, status: 'Darbā', due: 1 },
+  { id: 'P-109', title: 'Sadarbības līgums', org: 9, status: 'Jauns', due: -2 },
+  { id: 'P-110', title: 'Zvejas vietu saraksts', org: 10, status: 'Atbildēts', due: -10 },
+];
+const TASKS = [
+  { id: 't1', title: 'Piezvanīt par vides talkas loģistiku', org: 2, owner: A },
+  { id: 't2', title: 'Nosūtīt telpu nomas līguma projektu', org: 5, owner: A },
+  { id: 't3', title: 'Sagatavot atbildi par būvatļauju', org: 1, owner: A },
+  { id: 't4', title: 'Pārbaudīt pieslēguma tāmi', org: 6, owner: P },
+  { id: 't5', title: 'Sanāksmes darba kārtība ar Kalnu novadu', org: 9, owner: P },
+  { id: 't6', title: 'Pārskatīt kavētos pieprasījumus', org: null, owner: M },
+  { id: 't7', title: 'Iknedēļas sapulce ar darbiniekiem', org: null, owner: M },
+];
+const INTERACTIONS = [
+  { org: 2, type: 'Zvans', day: 0, summary: 'Precizēts talkas datums un dalībnieku skaits.', owner: A },
+  { org: 1, type: 'E-pasts', day: -1, summary: 'Saņemti papildu dokumenti būvatļaujai.', owner: A },
+  { org: 6, type: 'Sanāksme', day: -1, summary: 'Apspriests pieslēguma termiņš; nākamais solis — tāme.', owner: P },
+  { org: 3, type: 'Sanāksme', day: -2, summary: 'Saskaņoti ceļa remonta posmi.', owner: A },
+  { org: 8, type: 'E-pasts', day: -3, summary: 'Nosūtīts maršruta kartes melnraksts.', owner: P },
+  { org: 5, type: 'Zvans', day: -4, summary: 'Jautājums par telpu pieejamību vakaros.', owner: A },
+  { org: 7, type: 'Zvans', day: -5, summary: 'Lūgums mainīt transporta laiku.', owner: P },
+  { org: 9, type: 'E-pasts', day: -8, summary: 'Nosūtīts sadarbības līguma projekts.', owner: P },
+  { org: 4, type: 'E-pasts', day: -12, summary: 'Atbilde par tarifu nosūtīta.', owner: A },
+  { org: 10, type: 'Zvans', day: -20, summary: 'Saskaņots zvejas vietu saraksts.', owner: P },
+];
+
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+const dayOffset = n => { const d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() + n); return d; };
+const fmt = n => dayOffset(n).toLocaleDateString('lv-LV', { day: '2-digit', month: '2-digit', year: 'numeric' });
+const orgById = id => ORGS.find(o => o.id === id);
+const initials = name => name.split(/\s+/).map(w => w[0]).slice(0, 2).join('').toUpperCase();
+const STATUS_CLASS = { 'Jauns': 'new', 'Darbā': 'work', 'Atbildēts': 'done' };
+const doneTasks = () => { try { return JSON.parse(localStorage.getItem('demoTasksDone') || '[]'); } catch { return []; } };
+
+async function seedUsers() {
+  const all = users();
+  let changed = false;
+  for (const u of SEED_USERS) {
+    if (all[u.email]) continue;
+    const salt = crypto.randomUUID();
+    all[u.email] = { name: u.name, role: u.role, salt, hash: await hash(salt, DEMO_PASS) };
+    changed = true;
+  }
+  if (changed) localStorage.setItem(USERS, JSON.stringify(all));
+}
+
+function renderDashboard(email, user) {
+  const role = user.role || 'darbinieks';
+  const manager = role === 'vaditajs';
+  const orgs = manager ? ORGS : ORGS.filter(o => o.owner === email);
+  const orgIds = new Set(orgs.map(o => o.id));
+  const open = REQUESTS.filter(r => orgIds.has(r.org) && r.status !== 'Atbildēts').sort((a, b) => a.due - b.due);
+  const late = open.filter(r => r.due < 0);
+  const done = new Set(doneTasks());
+  const tasks = TASKS.filter(t => t.owner === email);
+  const feed = INTERACTIONS.filter(i => orgIds.has(i.org)).sort((a, b) => b.day - a.day).slice(0, 5);
+  const all = users();
+
+  $('avatar').textContent = initials(user.name);
+  $('user-name').textContent = user.name;
+  $('user-role').textContent = ROLE_LABEL[role];
+  $('dash-title').textContent = `Labdien, ${user.name.split(/\s+/)[0]}!`;
+  $('dash-sub').textContent = `${fmt(0)} · ${manager ? 'Kopsavilkums par visām organizācijām' : 'Kopsavilkums par jūsu organizācijām'}`;
+  document.querySelectorAll('.manager-only').forEach(el => el.classList.toggle('hidden', !manager));
+
+  $('k-orgs').textContent = orgs.length;
+  $('k-open').textContent = open.length;
+  $('k-late').textContent = late.length;
+  $('k-tasks').textContent = tasks.filter(t => !done.has(t.id)).length;
+
+  $('tasks').innerHTML = tasks.length ? tasks.map(t => `
+    <li class="${done.has(t.id) ? 'is-done' : ''}">
+      <input type="checkbox" id="task-${t.id}" data-task="${t.id}" ${done.has(t.id) ? 'checked' : ''}>
+      <label for="task-${t.id}"><span class="title">${esc(t.title)}</span>
+        <span class="meta" style="display:block">${t.org ? esc(orgById(t.org).name) : 'Iekšējs uzdevums'}${done.has(t.id) ? ' · Izpildīts' : ''}</span></label>
+    </li>`).join('') : '<li><p class="empty">Šodien uzdevumu nav.</p></li>';
+
+  $('feed').innerHTML = feed.length ? feed.map(i => `
+    <li><strong>${esc(i.type)}</strong> · ${esc(orgById(i.org).name)}
+      <div>${esc(i.summary)}</div>
+      <div class="meta">${i.day === 0 ? 'Šodien' : fmt(i.day)}${manager ? ' · ' + esc(all[i.owner]?.name || '') : ''}</div></li>`).join('')
+    : '<li><p class="empty">Mijiedarbību vēl nav.</p></li>';
+
+  $('requests').innerHTML = open.length ? open.map(r => `
+    <tr>
+      <th scope="row">${esc(r.id)} · ${esc(r.title)}</th>
+      <td>${esc(orgById(r.org).name)}</td>
+      <td><span class="badge ${STATUS_CLASS[r.status]}">${esc(r.status)}</span></td>
+      <td>${fmt(r.due)} ${r.due < 0 ? `<span class="badge late">Kavēts ${-r.due} d.</span>` : ''}</td>
+      ${manager ? `<td>${esc(all[orgById(r.org).owner]?.name || '')}</td>` : ''}
+    </tr>`).join('')
+    : `<tr><td colspan="${manager ? 5 : 4}"><p class="empty">${orgs.length ? 'Atvērtu pieprasījumu nav.' : 'Jums vēl nav piešķirta neviena organizācija.'}</p></td></tr>`;
+
+  if (manager) {
+    const staff = Object.entries(all).filter(([, u]) => (u.role || 'darbinieks') === 'darbinieks');
+    $('staff').innerHTML = staff.map(([em, u]) => {
+      const ids = new Set(ORGS.filter(o => o.owner === em).map(o => o.id));
+      const op = REQUESTS.filter(r => ids.has(r.org) && r.status !== 'Atbildēts');
+      return `<tr><th scope="row">${esc(u.name)}</th><td class="num">${ids.size}</td>
+        <td class="num">${INTERACTIONS.filter(i => i.owner === em && i.day >= -30).length}</td>
+        <td class="num">${op.length}</td><td class="num">${op.filter(r => r.due < 0).length}</td></tr>`;
+    }).join('');
+  }
+}
+
+$('tasks').addEventListener('change', e => {
+  const id = e.target.dataset.task;
+  if (!id) return;
+  const set = new Set(doneTasks());
+  e.target.checked ? set.add(id) : set.delete(id);
+  localStorage.setItem('demoTasksDone', JSON.stringify([...set]));
+  render();
+  $('task-' + id)?.focus();
+});
+
+function render() {
+  const email = sessionStorage.getItem(SESSION) || localStorage.getItem(SESSION);
+  const user = email && users()[email];
+  $('login-view').classList.toggle('hidden', !!user);
+  $('app-view').classList.toggle('hidden', !user);
+  if (user) renderDashboard(email, user);
+}
+
+document.querySelectorAll('.toggle-pass').forEach(btn => {
+  btn.innerHTML = EYE;
+  btn.onclick = () => {
+    const input = btn.previousElementSibling, show = input.type === 'password';
+    input.type = show ? 'text' : 'password';
+    btn.innerHTML = show ? EYE_OFF : EYE;
+    btn.setAttribute('aria-label', show ? 'Slēpt paroli' : 'Rādīt paroli');
+  };
+});
+
+$('reg-pass').oninput = e => {
+  const p = e.target.value;
+  const score = !p ? 0 : [p.length >= 8, /[A-ZĀ-Ž]/.test(p) && /[a-zā-ž]/.test(p), /\d/.test(p), /[^\wĀ-žā-ž]/.test(p)]
+    .filter(Boolean).length || 1;
+  const colors = ['#c2312b', '#e08a1e', '#d4b106', '#1a7f4b'];
+  const labels = ['Vāja', 'Vidēja', 'Laba', 'Spēcīga'];
+  document.querySelectorAll('.strength span').forEach((s, i) => s.style.background = i < score ? colors[score - 1] : '');
+  $('strength-label').textContent = score ? `Paroles stiprums: ${labels[score - 1]}` : '';
+};
+
+$('tab-login').onclick = () => showTab('login');
+$('tab-register').onclick = () => showTab('register');
+$('forgot').onclick = e => { e.preventDefault(); alertMsg('Paroles atjaunošana šajā prototipā nav pieejama.', 'err'); };
+
+$('form-register').onsubmit = e => {
+  e.preventDefault();
+  const form = e.target;
+  const name = $('reg-name').value.trim();
+  const email = $('reg-email').value.trim().toLowerCase();
+  const pass = $('reg-pass').value;
+  alertMsg('');
+  const bad = [
+    setInvalid('reg-name', !name),
+    setInvalid('reg-email', !EMAIL_RE.test(email)),
+    setInvalid('reg-pass', pass.length < 8),
+    setInvalid('reg-pass2', pass !== $('reg-pass2').value || !$('reg-pass2').value),
+  ].some(Boolean);
+  if (bad) return;
+  busy(form, async () => {
+    const all = users();
+    if (all[email]) return alertMsg('Konts ar šo e-pasta adresi jau eksistē.');
+    const salt = crypto.randomUUID();
+    all[email] = { name, role: 'darbinieks', salt, hash: await hash(salt, pass) };
+    localStorage.setItem(USERS, JSON.stringify(all));
+    form.reset(); $('reg-pass').oninput({ target: $('reg-pass') });
+    showTab('login');
+    $('login-email').value = email;
+    $('login-pass').focus();
+    alertMsg('Konts veiksmīgi izveidots. Tagad varat pieteikties.', 'ok');
+  });
+};
+
+$('form-login').onsubmit = e => {
+  e.preventDefault();
+  const form = e.target;
+  const email = $('login-email').value.trim().toLowerCase();
+  const pass = $('login-pass').value;
+  alertMsg('');
+  const bad = [setInvalid('login-email', !EMAIL_RE.test(email)), setInvalid('login-pass', !pass)].some(Boolean);
+  if (bad) return;
+  busy(form, async () => {
+    const user = users()[email];
+    if (!user || user.hash !== await hash(user.salt, pass)) return alertMsg('Nepareiza e-pasta adrese vai parole.');
+    ($('remember').checked ? localStorage : sessionStorage).setItem(SESSION, email);
+    form.reset();
+    render();
+  });
+};
+
+document.querySelectorAll('input').forEach(i => i.addEventListener('input', () => i.closest('.field')?.classList.remove('invalid')));
+
+$('logout').onclick = () => {
+  sessionStorage.removeItem(SESSION); localStorage.removeItem(SESSION);
+  showTab('login');
+  render();
+};
+
+seedUsers().then(render);
+</script>
+</body>
+</html>
